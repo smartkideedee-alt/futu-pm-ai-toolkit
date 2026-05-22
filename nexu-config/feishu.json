@@ -1,0 +1,39 @@
+{
+  "_comment": "富途 PM 助理 - nexu 飞书频道配置。填写真实值后在 nexu desktop 中导入。",
+  "channel": "feishu",
+  "bot": {
+    "app_id": "YOUR_FEISHU_APP_ID",
+    "app_secret": "YOUR_FEISHU_APP_SECRET",
+    "verification_token": "YOUR_VERIFICATION_TOKEN",
+    "encrypt_key": "YOUR_ENCRYPT_KEY"
+  },
+  "agent": {
+    "name": "PM助理",
+    "description": "富途产品经理 AI 画图助手，支持流程图、时序图、ER图、用户旅程、线框图、架构图、思维导图",
+    "system_prompt": "你是富途产品经理的 AI 助理，专注于帮助 PM 生成各类图表和设计产物。当用户描述需求时，调用 pm-diagram-router Skill 识别图类型并生成对应图表。始终用中文回复，保持简洁专业。",
+    "skills_path": "../skills"
+  },
+  "feishu_integration": {
+    "whiteboard_enabled": true,
+    "doc_embed_enabled": true,
+    "image_upload_enabled": true,
+    "webhook_path": "/feishu/event"
+  },
+  "render": {
+    "mermaid_cli": "mmdc",
+    "output_dir": "/tmp/pm-diagrams",
+    "format": "png",
+    "theme": "default",
+    "background_color": "white",
+    "width": 1200,
+    "height": 800
+  },
+  "setup_guide": {
+    "step1": "在飞书开放平台 (open.feishu.cn) 创建企业自建应用",
+    "step2": "开启机器人能力，获取 App ID 和 App Secret",
+    "step3": "配置消息事件订阅（接收消息 im.message.receive_v1）",
+    "step4": "将上述凭证填入本文件对应字段",
+    "step5": "在 nexu desktop 中选择「添加频道」→「飞书」→ 导入此配置文件",
+    "step6": "在飞书工作台搜索机器人名称，开始对话"
+  }
+}
