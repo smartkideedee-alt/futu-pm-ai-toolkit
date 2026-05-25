@@ -1,30 +1,41 @@
 #!/bin/bash
-# Mermaid 代码 → PNG 渲染脚本
-# 用法：./render-mermaid.sh <mermaid_file.mmd> [output.png]
-# 依赖：npm install -g @mermaid-js/mermaid-cli
+# Render a Mermaid DSL file to PNG or SVG using Mermaid CLI (mmdc)
+# Usage: render-mermaid.sh <input.mmd> [output.png|output.svg]
+# Output: path to the rendered file (stdout)
+# Dependency: mmdc — npm install -g @mermaid-js/mermaid-cli
 
 set -e
 
-INPUT_FILE="${1:-/dev/stdin}"
+INPUT_FILE="${1}"
 OUTPUT_DIR="/tmp/pm-diagrams"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 OUTPUT_FILE="${2:-${OUTPUT_DIR}/diagram_${TIMESTAMP}.png}"
 
-mkdir -p "$OUTPUT_DIR"
-
-if ! command -v mmdc &> /dev/null; then
-  echo "错误：未找到 Mermaid CLI。请运行：npm install -g @mermaid-js/mermaid-cli"
+if [ -z "$INPUT_FILE" ]; then
+  echo "Usage: $0 <input.mmd> [output.png]" >&2
   exit 1
 fi
 
-mmdc \
+mkdir -p "$OUTPUT_DIR"
+
+MMDC_BIN="${MMDC_BIN:-mmdc}"
+if ! command -v "$MMDC_BIN" &>/dev/null; then
+  MMDC_BIN="/Users/admin/.node24/bin/mmdc"
+fi
+
+if ! command -v "$MMDC_BIN" &>/dev/null && [ ! -x "$MMDC_BIN" ]; then
+  echo "Error: Mermaid CLI not found. Install with: npm install -g @mermaid-js/mermaid-cli" >&2
+  exit 1
+fi
+
+"$MMDC_BIN" \
   --input "$INPUT_FILE" \
   --output "$OUTPUT_FILE" \
-  --theme default \
+  --theme neutral \
   --backgroundColor white \
-  --width 1200 \
-  --height 800 \
+  --width 1400 \
+  --height 900 \
   --scale 2
 
-echo "✅ 渲染完成：$OUTPUT_FILE"
+echo "✅ Rendered: $OUTPUT_FILE" >&2
 echo "$OUTPUT_FILE"

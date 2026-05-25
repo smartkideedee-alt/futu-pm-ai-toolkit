@@ -1,53 +1,55 @@
-# 富途 PM AI 工具包
+# Futu PM AI Toolkit
 
-## 项目简介
+## Overview
 
-本项目为富途产品经理提供 AI 驱动的画图 & 设计能力：
-- **主入口**：飞书机器人对话（@PM助理 + 自然语言描述）
-- **副入口**：Claude Code Skill Club（`/pm-flowchart` 等命令）
+AI-powered diagramming toolkit for Futu product managers. Claude acts as the orchestrator; Mermaid CLI does all the rendering — no second AI call, no external service dependency.
 
-## Skills 目录
+- **Primary entry:** Feishu bot (@PM Assistant + natural language)
+- **Secondary entry:** Claude Code Skills (`/pm-flowchart`, `/pm-sequence`, etc.)
 
-所有 PM Skills 位于 `skills/` 目录，已注册为 Claude Code Skills：
+## Skills
 
-| Skill | 用途 |
-|-------|------|
-| `pm-diagram-router` | 主路由，自动识别图类型 |
-| `pm-flowchart` | 流程图 |
-| `pm-sequence` | 时序图 |
-| `pm-er-diagram` | ER 图 |
-| `pm-user-journey` | 用户旅程图 |
-| `pm-wireframe` | 线框图（HTML）|
-| `pm-architecture` | 架构图 |
-| `pm-mind-map` | 思维导图 |
+| Skill | Purpose | Renderer |
+|-------|---------|---------|
+| `pm-diagram-router` | Auto-detect type and route | — |
+| `pm-flowchart` | Business process flowcharts | Mermaid CLI |
+| `pm-sequence` | API / microservice sequence diagrams | Mermaid CLI |
+| `pm-er-diagram` | Entity-relationship diagrams | Mermaid CLI |
+| `pm-user-journey` | User journey maps | Mermaid CLI |
+| `pm-architecture` | System architecture diagrams | Mermaid CLI |
+| `pm-mind-map` | Mind maps | Mermaid CLI |
+| `pm-wireframe` | HTML wireframes | Claude (generates HTML directly) |
 
-## 渲染依赖：open-design
+## Rendering Architecture
 
-所有图表通过本地 open-design daemon 生成（手绘风格 HTML / PNG / PPTX）。
+**Diagrams (6 types):** Claude Code generates Mermaid DSL → `mmdc` renders PNG
+- Single AI call, ~5–15 seconds total
+- Deterministic, professional output
+- No external service required
+
+**Wireframes:** Claude Code generates a self-contained HTML file directly
+- No external service required
+- Opens in browser immediately
+
+## Primary Rendering Engine: Mermaid CLI
+
+`mmdc` is installed at `/Users/admin/.node24/bin/mmdc` (v11.15.0).
+
+Rendering script: `scripts/render-mermaid.sh`
 
 ```bash
-# 启动 open-design daemon（首次启动或重启后执行）
-cd ~/open-design
-PATH="/Users/admin/.node24/bin:$PATH" pnpm tools-dev start
-
-# 验证 daemon 状态
-curl -sf http://127.0.0.1:55850/api/health
-
-# daemon 默认端口：55850（API）/ 55857（Web UI，可选）
+PNG_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/render-mermaid.sh /tmp/diagram.mmd)
+open "$PNG_FILE"
 ```
 
-集成脚本位于 `scripts/`：
-- `od-generate.sh` — 创建项目并触发生成，返回 `project_id:run_id`
-- `od-status.sh`  — 轮询运行状态至完成（默认超时 300s）
-- `od-export.sh`  — 下载生成文件（html / png / pptx）
+Output saved to `/tmp/pm-diagrams/`.
 
-## 飞书配置
+## No External Service Required
 
-见 `nexu-config/feishu.json`（需填入真实 Bot Token）。
+All diagram types work without any running daemon or server.
+The only dependency is `mmdc` (globally installed) and Claude Code itself.
 
-## 快速开始
+## Feishu Integration
 
-1. 安装 nexu desktop（https://github.com/nexu-io/nexu）
-2. 配置 `nexu-config/feishu.json`
-3. 在 nexu 中添加 Feishu 频道
-4. 在飞书中 @PM助理 发送任意画图需求
+Configure `nexu-config/feishu.json` with real bot credentials.
+Use `scripts/push-to-feishu-whiteboard.sh` to push Mermaid diagrams to Feishu whiteboards.

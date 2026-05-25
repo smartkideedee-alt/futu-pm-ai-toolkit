@@ -1,45 +1,75 @@
 ---
 name: pm-wireframe
-description: 将页面结构描述转换为高保真 HTML 线框图（open-design frontend-design），适用于需求评审原型、UI 结构讨论等场景。
+description: Convert a page structure description into a clean HTML wireframe. Claude generates a self-contained HTML file directly — no external service required. Suitable for requirement review prototypes and UI structure discussions.
 ---
 
-# PM 线框图 Skill
+# PM Wireframe Skill
 
-## 适用场景
+## Use Cases
 
-- 需求评审前的快速原型
-- 页面结构与布局讨论
-- 新功能 UI 方案验证
-- 移动端 / PC 端页面框架设计
+- Quick prototype before requirement review
+- Page structure and layout discussion
+- New feature UI proposal validation
+- Mobile / PC page framework design
 
-## 执行步骤
+## Execution Steps
 
-1. 确定平台（mobile/PC）、页面名称、核心组件和布局结构
-2. 将描述转换为英文 brief：
-   ```
-   Create a [mobile/desktop] wireframe for: [页面名称]
-   
-   Layout:
-   - Header: [顶部内容，如导航栏、标题]
-   - Main area:
-     - [组件1]: [描述]
-     - [组件2]: [描述]
-   - Footer/Actions: [底部按钮或导航]
-   
-   Style: clean wireframe, focus on layout structure.
-   Chinese text for all labels.
-   ```
-3. 执行生成（frontend-design 提供更高保真度）：
+1. **Parse the user's description** — determine the platform (mobile/desktop), page name, core UI components, and layout structure.
+
+2. **Generate a self-contained HTML wireframe file** with these characteristics:
+   - Clean, professional wireframe aesthetic (gray tones, no color fills)
+   - Proper mobile (375px) or desktop (1280px) viewport
+   - All labels in Chinese
+   - Placeholder blocks for images/media (gray box with diagonal lines)
+   - Clear component hierarchy and spacing
+   - No external dependencies (fonts, CSS, JS all inline)
+
+3. **Write the HTML to a temp file and open:**
    ```bash
-   RESULT=$(bash ~/futu-pm-ai-toolkit/scripts/od-generate.sh \
-     "frontend-design" "线框图_$(date +%m%d_%H%M)" "$BRIEF")
-   PROJECT_ID=$(echo "$RESULT" | cut -d: -f1)
-   RUN_ID=$(echo "$RESULT" | cut -d: -f2)
-   STATUS=$(bash ~/futu-pm-ai-toolkit/scripts/od-status.sh "$RUN_ID" 900)
-   HTML_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/od-export.sh "$PROJECT_ID" html)
+   OUTPUT_DIR="/tmp/pm-diagrams"
+   mkdir -p "$OUTPUT_DIR"
+   TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+   HTML_FILE="$OUTPUT_DIR/wireframe_${TIMESTAMP}.html"
+   # Write the generated HTML to $HTML_FILE
    open "$HTML_FILE"
    ```
 
-## 备注
+4. **Report** the HTML file path to the user.
 
-如果 `frontend-design` 失败，改用 `hand-drawn-diagrams` 作为备用。
+## HTML Wireframe Template
+
+Use this structure as a base and adapt to the user's description:
+
+```html
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<title>[页面名称] — 线框图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #f5f5f5; font-family: -apple-system, sans-serif; display: flex; justify-content: center; padding: 40px 20px; }
+  .device { background: white; border: 2px solid #333; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+  .mobile { width: 375px; min-height: 812px; }
+  .desktop { width: 1280px; min-height: 800px; }
+  .component { border: 1.5px solid #bbb; margin: 8px; padding: 12px; border-radius: 4px; background: #fafafa; color: #555; font-size: 13px; }
+  .header { background: #e8e8e8; border: none; border-bottom: 2px solid #ccc; padding: 16px; font-size: 15px; font-weight: bold; color: #333; }
+  .placeholder { background: #eee; border: 1.5px dashed #aaa; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; }
+  .btn { background: #333; color: white; border: none; border-radius: 6px; padding: 12px; text-align: center; font-size: 14px; margin: 8px; }
+  .btn-outline { background: white; color: #333; border: 1.5px solid #333; }
+  .label { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .section-title { font-size: 13px; font-weight: bold; color: #333; padding: 8px; border-bottom: 1px solid #eee; margin-bottom: 4px; }
+  .tab-bar { display: flex; border-top: 1.5px solid #ccc; background: #f8f8f8; }
+  .tab { flex: 1; text-align: center; padding: 10px 4px; font-size: 11px; color: #999; border-right: 1px solid #eee; }
+  .tab.active { color: #333; font-weight: bold; }
+</style>
+</head>
+<body>
+  <div class="device mobile">
+    <!-- Render the wireframe components here based on user's description -->
+  </div>
+</body>
+</html>
+```
+
+Build the wireframe by composing components from the template. Be thorough — include all the sections the user described, using appropriate wireframe elements (placeholder boxes, labels, buttons, lists, tab bars, etc.).

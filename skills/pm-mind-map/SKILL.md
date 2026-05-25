@@ -1,38 +1,85 @@
 ---
 name: pm-mind-map
-description: 将主题和要点转换为手绘风格思维导图（open-design），适用于需求头脑风暴、PRD 大纲整理、功能拆解、问题分析。
+description: Convert a topic and key points into a professional mind map PNG using Mermaid CLI. Suitable for PRD structure, brainstorming, feature decomposition, and problem analysis. Rendered by Mermaid — not by Claude.
 ---
 
-# PM 思维导图 Skill
+# PM Mind Map Skill
 
-## 适用场景
+## Use Cases
 
-- PRD 功能结构大纲梳理
-- 需求讨论头脑风暴整理
-- 竞品分析维度梳理
-- 项目范围 / 边界讨论
+- PRD feature structure outline
+- Requirement discussion brainstorm organization
+- Competitive analysis dimension breakdown
+- Project scope and boundary discussion
 
-## 执行步骤
+## Execution Steps
 
-1. 确定中心主题和主要分支，展开子节点
-2. 将描述转换为英文 brief：
+1. **Parse the user's description** — identify the central topic and the hierarchy of main branches and sub-nodes (2–3 levels deep is ideal).
+
+2. **Write Mermaid DSL** to a temp file. Use `mindmap` syntax.
+
+   DSL template:
+   ```mermaid
+   mindmap
+     root((中心主题))
+       分支一
+         子节点 1-1
+         子节点 1-2
+       分支二
+         子节点 2-1
+         子节点 2-2
+         子节点 2-3
+       分支三
+         子节点 3-1
    ```
-   Create a hand-drawn style mind map for: [中心主题]
-   
-   Main branches:
-   - [分支1]: [子节点1-1], [子节点1-2], [子节点1-3]
-   - [分支2]: [子节点2-1], [子节点2-2]
-   - [分支3]: [子节点3-1], [子节点3-2]
-   
-   Use Chinese labels for all nodes. Make central node prominent.
-   ```
-3. 执行生成：
+
+   Syntax rules:
+   - Indentation defines hierarchy (2 spaces per level)
+   - `root((text))` — circular root node
+   - `text` — plain branch or leaf
+   - `[text]` — rectangle node
+   - `(text)` — rounded node
+   - `{{text}}` — hexagon node
+
+   All labels may be in Chinese.
+
+3. **Write DSL to file and render:**
    ```bash
-   RESULT=$(bash ~/futu-pm-ai-toolkit/scripts/od-generate.sh \
-     "hand-drawn-diagrams" "思维导图_$(date +%m%d_%H%M)" "$BRIEF")
-   PROJECT_ID=$(echo "$RESULT" | cut -d: -f1)
-   RUN_ID=$(echo "$RESULT" | cut -d: -f2)
-   STATUS=$(bash ~/futu-pm-ai-toolkit/scripts/od-status.sh "$RUN_ID" 900)
-   HTML_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/od-export.sh "$PROJECT_ID" html)
-   open "$HTML_FILE"
+   MMD_FILE="/tmp/mindmap_$(date +%Y%m%d_%H%M%S).mmd"
+   # Write the Mermaid DSL to $MMD_FILE
+   PNG_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/render-mermaid.sh "$MMD_FILE")
+   open "$PNG_FILE"
    ```
+
+4. **Report** the PNG file path to the user.
+
+## Example
+
+**Input:** Mind map for a stock trading app PRD
+
+**Mermaid DSL:**
+```mermaid
+mindmap
+  root((股票交易 App PRD))
+    账户体系
+      注册 / 登录
+      实名认证 KYC
+      账户余额与充提
+    行情功能
+      实时报价
+      K 线图
+      盘口数据
+    交易功能
+      限价委托
+      市价委托
+      条件单
+      撤单管理
+    持仓管理
+      当前持仓
+      历史成交
+      盈亏分析
+    通知中心
+      成交提醒
+      涨跌预警
+      系统公告
+```

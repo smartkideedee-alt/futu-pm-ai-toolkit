@@ -1,41 +1,98 @@
 ---
 name: pm-architecture
-description: 将系统架构描述转换为手绘风格架构图（open-design），适用于技术方案沟通、系统边界梳理、微服务架构概览等场景。
+description: Convert a system architecture description into a professional architecture diagram PNG using Mermaid CLI. Suitable for technical solution communication, microservice overviews, and system boundary clarification. Rendered by Mermaid — not by Claude.
 ---
 
-# PM 架构图 Skill
+# PM Architecture Diagram Skill
 
-## 适用场景
+## Use Cases
 
-- 新功能系统架构方案沟通
-- 微服务架构概览
-- 数据流向与系统边界梳理
-- 与研发对齐技术方案
+- New feature system architecture communication
+- Microservice architecture overview
+- Data flow and system boundary clarification
+- Aligning technical approach with engineering teams
 
-## 执行步骤
+## Execution Steps
 
-1. 识别系统模块、层次结构和数据流向
-2. 将描述转换为英文 brief：
+1. **Parse the user's description** — identify system layers, components within each layer, data flow directions, and external dependencies.
+
+2. **Write Mermaid DSL** to a temp file. Use `flowchart TD` with `subgraph` blocks to represent layers.
+
+   DSL template:
+   ```mermaid
+   flowchart TD
+       subgraph 接入层
+           A[App / Web]
+           B[API Gateway]
+       end
+       subgraph 服务层
+           C[用户服务]
+           D[订单服务]
+           E[通知服务]
+       end
+       subgraph 数据层
+           F[(MySQL)]
+           G[(Redis)]
+           H[(Kafka)]
+       end
+
+       A --> B
+       B --> C & D
+       D --> H
+       H --> E
+       C --> F & G
+       D --> F
    ```
-   Create a hand-drawn style architecture diagram for: [系统名称]
-   
-   Layers/Components:
-   - Layer 1 ([层名]): [组件1], [组件2]
-   - Layer 2 ([层名]): [组件3], [组件4]
-   - Layer 3 ([层名]): [组件5]
-   
-   Data flow: [数据源] → [处理层] → [输出层]
-   External dependencies: [外部系统]
-   
-   Use Chinese labels. Show arrows for data flow direction.
-   ```
-3. 执行生成：
+
+   Node shape guide for architecture:
+   - `[Name]` — service or component (rectangle)
+   - `[(Name)]` — database (cylinder)
+   - `([Name])` — external system (rounded rectangle)
+   - `{{Name}}` — queue or message bus (hexagon)
+
+   Use `subgraph LayerName` to group components by tier.
+   Data flow arrows: `-->` (solid), `-.->` (dashed for async)
+
+3. **Write DSL to file and render:**
    ```bash
-   RESULT=$(bash ~/futu-pm-ai-toolkit/scripts/od-generate.sh \
-     "hand-drawn-diagrams" "架构图_$(date +%m%d_%H%M)" "$BRIEF")
-   PROJECT_ID=$(echo "$RESULT" | cut -d: -f1)
-   RUN_ID=$(echo "$RESULT" | cut -d: -f2)
-   STATUS=$(bash ~/futu-pm-ai-toolkit/scripts/od-status.sh "$RUN_ID" 900)
-   HTML_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/od-export.sh "$PROJECT_ID" html)
-   open "$HTML_FILE"
+   MMD_FILE="/tmp/architecture_$(date +%Y%m%d_%H%M%S).mmd"
+   # Write the Mermaid DSL to $MMD_FILE
+   PNG_FILE=$(bash ~/futu-pm-ai-toolkit/scripts/render-mermaid.sh "$MMD_FILE")
+   open "$PNG_FILE"
    ```
+
+4. **Report** the PNG file path to the user.
+
+## Example
+
+**Input:** Draw the architecture for a stock trading app: mobile/web clients, API gateway, three backend services (trading, market data, user), a database, and a message queue for notifications
+
+**Mermaid DSL:**
+```mermaid
+flowchart TD
+    subgraph 客户端
+        A[手机 App]
+        B[Web 端]
+    end
+    subgraph 接入层
+        C[API Gateway]
+    end
+    subgraph 业务服务层
+        D[交易服务]
+        E[行情服务]
+        F[用户服务]
+    end
+    subgraph 数据 & 消息层
+        G[(MySQL 主库)]
+        H[(Redis 缓存)]
+        I{{Kafka 消息队列}}
+        J[通知服务]
+    end
+
+    A & B --> C
+    C --> D & E & F
+    D --> G & I
+    E --> H
+    F --> G
+    I -.-> J
+```

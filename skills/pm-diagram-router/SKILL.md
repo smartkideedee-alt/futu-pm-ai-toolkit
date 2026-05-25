@@ -1,48 +1,40 @@
 ---
 name: pm-diagram-router
-description: 富途 PM 画图主入口。当用户描述任何画图需求时自动触发，识别图类型并路由到对应专项 Skill。基于 open-design 生成手绘风格交互图表（HTML）。
+description: Main entry point for PM diagramming. Auto-detects diagram type from natural language and routes to the correct specialized skill. Uses Mermaid CLI as the rendering engine — no second AI call, consistent professional output.
 ---
 
-# PM 画图路由 Skill
+# PM Diagram Router
 
-## 职责
+## Responsibility
 
-识别用户的自然语言画图需求，判断图类型，调用对应专项 Skill。
+Detect the diagram type from the user's natural language input, then invoke the matching specialized skill.
 
-## 前置：检查 open-design 状态
+## Diagram Type Detection
 
-```bash
-curl -sf http://127.0.0.1:55850/api/health | python3 -c "
-import sys,json; r=json.load(sys.stdin)
-print('✅ open-design 运行中 (v' + r.get('version','?') + ')' if r.get('ok') else '❌ 未运行')
-" || echo "❌ open-design daemon 未运行
+| Keywords (Chinese or English) | Skill to invoke | Renderer |
+|-------------------------------|----------------|---------|
+| 流程 / 步骤 / 审批 / flowchart / process / approval | pm-flowchart | Mermaid CLI |
+| 时序 / API / 接口 / sequence / API call / microservice | pm-sequence | Mermaid CLI |
+| ER / 实体 / 数据库 / 表结构 / entity / database / schema | pm-er-diagram | Mermaid CLI |
+| 旅程 / 体验 / UX / journey / experience / pain point | pm-user-journey | Mermaid CLI |
+| 线框 / 原型 / 页面 / UI / wireframe / prototype / layout | pm-wireframe | open-design (frontend-design) |
+| 架构 / 系统 / 组件 / architecture / system / component | pm-architecture | Mermaid CLI |
+| 思维导图 / 脑图 / 大纲 / mind map / mindmap / outline | pm-mind-map | Mermaid CLI |
 
-启动命令：
-cd ~/open-design
-PATH=\"/Users/admin/.node24/bin:\$PATH\" pnpm tools-dev start"
-```
+Default when ambiguous: invoke **pm-flowchart**.
 
-## 图类型识别规则
+## Execution Steps
 
-| 关键词 | 调用 Skill | open-design Skill ID |
-|--------|-----------|---------------------|
-| 流程、步骤、审批、购买、注册 | pm-flowchart | `hand-drawn-diagrams` |
-| 时序、API、接口、调用链、前后端 | pm-sequence | `hand-drawn-diagrams` |
-| ER、实体、数据库、表结构 | pm-er-diagram | `hand-drawn-diagrams` |
-| 旅程、体验、UX、路径、痛点 | pm-user-journey | `hand-drawn-diagrams` |
-| 线框、原型、页面、UI、布局 | pm-wireframe | `frontend-design` |
-| 架构、系统、组件、层次 | pm-architecture | `hand-drawn-diagrams` |
-| 思维导图、脑图、大纲 | pm-mind-map | `hand-drawn-diagrams` |
+1. Analyze the user's input and determine the diagram type.
+   - If the user explicitly names a type, use it directly.
+   - If ambiguous, pick the best match from the table above.
+2. Invoke the matching specialized skill with the full user description as input.
+3. For wireframe only: verify open-design daemon is running first:
+   ```bash
+   curl -sf http://127.0.0.1:55850/api/health || echo "⚠️  open-design daemon not running. Start it: cd ~/open-design && PATH=\"/Users/admin/.node24/bin:\$PATH\" pnpm tools-dev start"
+   ```
 
-## 执行步骤
+## Output
 
-1. 分析用户输入，判断图类型（用户明确指定时直接使用，否则按关键词匹配）
-2. 无法判断时默认使用 pm-flowchart
-3. 调用对应专项 Skill，传入完整用户描述
-
-## 输出说明
-
-所有图表生成后输出：
-- HTML 文件路径（浏览器可直接预览，支持交互）
-- 打开命令：`open <html_file>`
-- open-design 项目 ID（可在 http://127.0.0.1:55857 继续编辑）
+All non-wireframe diagrams return a PNG file path rendered by Mermaid CLI.
+Wireframe returns an HTML file rendered by open-design.
