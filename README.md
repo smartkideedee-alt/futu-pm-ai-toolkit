@@ -1,6 +1,6 @@
 # futu-pm-ai-toolkit
 
-A collection of Claude Code Skills for PM diagramming. Clone the repo, open it in Claude Code, and use natural language to generate diagrams directly in your terminal.
+这是一套专为 PM 绘图设计的 Claude Code Skills 集合。克隆该仓库，在 Claude Code 中打开，即可使用自然语言直接在终端内生成图表。
 
 ## Skills
 
